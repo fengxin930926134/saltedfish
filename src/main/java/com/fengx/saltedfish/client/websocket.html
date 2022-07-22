@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8" />
+<head>
+<title>webocket原生实现</title>
+<link href="https://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.css"
+    rel="stylesheet">
+<script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+</head>
+<body class="container">
+   <button type="button" id="send" class="btn btn-default" data-dismiss="modal">发送消息</button>
+</body>
+<script type="text/javascript">
+	//设置一个变量，用于存储websocket
+	var socket = null;
+
+	//判断当前浏览器是否支持WebSocket
+	if ('WebSocket' in window) {
+		//alert('当前浏览器支持WebSocket')
+		//实现化WebSocket对象，指定要连接的服务器地址与端口  建立连接
+		//这个url必须写对！ws固定的，ip是自己配置的，路径是自己命名的
+		socket = new WebSocket("ws://127.0.0.1:7000/ws");
+	}
+	else {
+		alert('当前浏览器 Not support websocket')
+	}
+
+	//连接成功（回调方法）
+	socket.onopen = function () {
+		alert("Socket 连接成功");
+	}
+
+	//连接错误（回调方法）
+	socket.onerror = function () {
+		alert('连接出错')
+		//可尝试刷新页面--循环
+		//window.location.reload();
+	};
+
+	//接收消息（回调方法）
+	socket.onmessage = function (event) {
+		alert("你收到了一条返回消息："+event.data);
+	}
+
+	//连接关闭（回调方法）
+	socket.onclose = function () {
+		alert("连接关闭");
+	}
+
+	//窗口关闭，关闭websocket（否则server端会抛异常）
+	window.onbeforeunload = function () {
+		socket.close();
+	}
+	
+	$("#send").click(function () {
+		console.log("测试");
+		socket.send('Hello Server!');
+	});
+</script>
+</html>
