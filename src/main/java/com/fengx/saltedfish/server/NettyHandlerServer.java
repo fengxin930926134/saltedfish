@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 1、客户端心跳检测与服务端心跳检测
@@ -53,10 +52,17 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
      * 保持连接的Context, k.ctx v.userId
      */
     public static final Map<ChannelHandlerContext, String> MAP = new HashMap<>();
+
     /**
      * kv相反，方便取数据
      */
-    public static final Map<String, ChannelHandlerContext> MAPDATA = new HashMap<>();
+    public static final Map<String, ChannelHandlerContext> MAPDATA = new Hashtable<>();
+
+    /**
+     * 用户退出时间数据
+     * k.userId v.时间戳
+     */
+    public static final Map<String, Long> SIGNOUT_TIME_DATA = new Hashtable<>();
 
     /**
      * 已发送的消息列表 k.msgId v.消息
@@ -142,10 +148,17 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
     }
 
     /**
+     * 获取退出连接数据
+     */
+    public Map<String, Long> getSignOutTimeData() {
+        return SIGNOUT_TIME_DATA;
+    }
+
+    /**
      * 客户端上线的时候调用
      */
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) {
         MAP.put(ctx, null);
         log.info(ctx.channel().remoteAddress() + " 建立连接, 在线数:" + MAP.size());
         ctx.fireChannelActive();
@@ -155,10 +168,11 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
      * 客户端掉线的时候调用
      */
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) {
         String remove = MAP.remove(ctx);
         if (remove != null) {
             MAPDATA.remove(remove);
+            SIGNOUT_TIME_DATA.put(remove, System.currentTimeMillis());
         }
         log.info(ctx.channel().remoteAddress() + " 断开连接, 在线数:" + MAP.size());
         ctx.fireChannelInactive();
@@ -169,7 +183,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
      * 读取客户端信息
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame message) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame message) {
         String remoteAddress = ctx.channel().remoteAddress().toString();
         log.info("receive {} -> {}", remoteAddress, message.text());
         if (!MAP.containsKey(ctx)) {

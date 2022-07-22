@@ -124,6 +124,7 @@
                         "roomId": this.roomId,
                     }).then((e) => {
                         if (e && e.status === 200) {
+                            this.roomId = null;
                             this.fetchData();
                         }
                     });
@@ -189,9 +190,9 @@
                 () => this.dialogVisible,
                 () => {
                     if (!this.dialogVisible) {
+                        this.quitRoom();
                         this.roomCurrentNumber = 0;
                         this.roomNumber = 0;
-                        this.quitRoom();
                     }
                 }, // 组件创建完后不立即获取数据
                 {immediate: false}
