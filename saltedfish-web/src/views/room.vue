@@ -5,13 +5,6 @@
             <el-form-item label="房间名">
                 <el-input v-model="formInline.user" placeholder="房间名"></el-input>
             </el-form-item>
-            <el-form-item label="状态">
-                <el-select v-model="formInline.region" placeholder="状态" value="">
-                    <el-option label="全部" value=""></el-option>
-                    <el-option label="游戏中" value="1"></el-option>
-                    <el-option label="等待中" value="2"></el-option>
-                </el-select>
-            </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="fetchData()">查询</el-button>
                 <el-button type="primary" @click="openCreateRoom()">创建</el-button>
@@ -34,6 +27,18 @@
                     label="人数/总数">
                 <template slot-scope="scope">
                     {{(scope.row.userIds? scope.row.userIds.length:0) + "/" + scope.row.number}}
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="playing"
+                    label="状态"
+                    :filters="[{ text: '游戏中', value: true }, { text: '等待中', value: false }]"
+                    :filter-method="filterTag"
+                    filter-placement="bottom-end">
+                <template slot-scope="scope">
+                    <el-tag
+                            :type="scope.row.playing ? 'danger' : 'success'"
+                            disable-transitions>{{!scope.row.playing? '等待中' : '游戏中'}}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
@@ -85,6 +90,9 @@
         },
         watch: {},
         methods: {
+            filterTag(value, row) {
+                return row.playing === value;
+            },
             /**
              * 检查是否加入房间
              */
@@ -181,7 +189,7 @@
             beginGame() {
                 switch (this.$route.query.id) {
                     case "LANDLORDS":
-                        this.$router.push({ path: '/landlords', query: { roomId: this.roomId } });
+                        this.$router.push({path: '/landlords', query: {roomId: this.roomId}});
                         break;
                     default:
                         this.$message.error("进入游戏异常")

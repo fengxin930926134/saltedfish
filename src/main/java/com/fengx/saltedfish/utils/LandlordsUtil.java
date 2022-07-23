@@ -1,13 +1,38 @@
 package com.fengx.saltedfish.utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
+
+import java.util.*;
 
 /**
  * 斗地主工具类
  */
 public class LandlordsUtil {
+
+    /**
+     * 其余数字按正常排序
+     */
+    private static final List<String> SORT = Lists.newArrayList(
+            "10", "J", "Q", "K", "A", "2", "king", "KING"
+    );
+
+    /**
+     * 牌组排序
+     */
+    public static Comparator<String> comparator = (o1, o2) -> {
+        if (o1.equals(o2)) {
+            return 0;
+        }
+        if (!SORT.contains(o1) && !SORT.contains(o2)) {
+            return o1.compareTo(o2);
+        } else if (SORT.contains(o1) && SORT.contains(o2)) {
+            return SORT.indexOf(o1) - SORT.indexOf(o2);
+        } else if (SORT.contains(o1)) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
 
     /**
      * 发牌
@@ -64,6 +89,10 @@ public class LandlordsUtil {
 
         // 返回
         List<List<String>> pai = new ArrayList<>(4);
+        player01.sort(comparator);
+        player02.sort(comparator);
+        player03.sort(comparator);
+        dipai.sort(comparator);
         pai.add(player01);
         pai.add(player02);
         pai.add(player03);

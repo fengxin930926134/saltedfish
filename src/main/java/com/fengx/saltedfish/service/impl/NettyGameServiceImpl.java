@@ -77,6 +77,9 @@ public class NettyGameServiceImpl implements NettyGameService {
     @Override
     public Response getGameInfo(GetGameInfoParam param) {
         String gameInfo = GameManageServer.getInstance().getGameInfo(param);
+        if (gameInfo == null) {
+            throw new WarnException("游戏信息不存在！");
+        }
         return new ObjectResponse<>(gameInfo);
     }
 }

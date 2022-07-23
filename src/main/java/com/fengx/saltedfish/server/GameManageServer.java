@@ -168,7 +168,7 @@ public class GameManageServer {
                             hashMap.put(id, cards.get(i));
                             sortMap.put(id, (i + 1));
                             if (i == 0) {
-                                gameInfo.setLog("玩家" + id + "开始叫地主\n");
+                                gameInfo.setLog(Lists.newArrayList("玩家" + id + "开始叫地主"));
                             }
                             i++;
                         }

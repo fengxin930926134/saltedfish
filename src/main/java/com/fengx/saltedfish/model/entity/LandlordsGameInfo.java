@@ -14,7 +14,7 @@ public class LandlordsGameInfo {
     /**
      * 游戏日志
      */
-    private String log;
+    private List<String> log;
 
     /**
      * v:手牌，k.userId

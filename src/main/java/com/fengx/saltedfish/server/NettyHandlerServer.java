@@ -13,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 1、客户端心跳检测与服务端心跳检测
@@ -139,11 +136,19 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
     public void inspectNettyMsgSend(Integer interval) {
         if (interval != null && interval > 0) {
             long timeMillis = System.currentTimeMillis();
+            Set<String> ids = new HashSet<>();
             SEND_MSG_MAP.forEach((id, msg) -> {
                 if (msg.getSendTime() > timeMillis - interval) {
-                    send(msg);
+                    if (MAP.containsKey(msg.getCtx())) {
+                        send(msg);
+                    } else {
+                        ids.add(id);
+                    }
                 }
             });
+            if (CollectionUtils.isNotEmpty(ids)) {
+                ids.forEach(id -> log.info("移除消息 -> " + SEND_MSG_MAP.remove(id)));
+            }
         }
     }
 
@@ -220,6 +225,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
                         // 关联id
                         MAP.put(ctx, nettyMessage.getContent());
                         MAPDATA.put(nettyMessage.getContent(), ctx);
+                        SIGNOUT_TIME_DATA.remove(nettyMessage.getContent());
                         break;
                     default: ctx.close();
                 }
