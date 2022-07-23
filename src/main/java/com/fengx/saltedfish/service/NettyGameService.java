@@ -2,6 +2,7 @@ package com.fengx.saltedfish.service;
 
 import com.fengx.saltedfish.common.response.Response;
 import com.fengx.saltedfish.model.param.CreateRoomParam;
+import com.fengx.saltedfish.model.param.GetGameInfoParam;
 import com.fengx.saltedfish.model.param.RoomParam;
 
 public interface NettyGameService {
@@ -30,4 +31,9 @@ public interface NettyGameService {
      * 检查userId是否已加入房间
      */
     Response inspectJoinRoom(String userId);
+
+    /**
+     * 获取游戏信息
+     */
+    Response getGameInfo(GetGameInfoParam param);
 }

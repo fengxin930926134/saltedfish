@@ -18,12 +18,14 @@ public class LandlordsUtil {
         String[] colors = {"♥", "♠", "♦", "♣"};
         String[] numbers = {"A", "J", "Q", "K", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
         // 存储大小王
-        poker.add("大王");
-        poker.add("小王");
+        poker.add("KING");
+        poker.add("king");
         //循环遍历两个数组，组装52张牌
         for (String color : colors) {
             for (String number : numbers) {
-                poker.add(color + number);
+                // 无花色
+//                poker.add(color + number);
+                poker.add(number + "");
             }
         }
         /*
@@ -67,5 +69,9 @@ public class LandlordsUtil {
         pai.add(player03);
         pai.add(dipai);
         return pai;
+    }
+
+    public static void main(String[] args) {
+        dealCards().forEach(System.out::println);
     }
 }

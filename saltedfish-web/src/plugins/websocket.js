@@ -22,12 +22,6 @@ console.log("userId =", localStorage.getItem(wsUserIdKey));
 const msgMap = new Map();
 let inspectMsg;
 
-let checkConnectStatus = () => {
-    if (!isConnect()) {
-        Message.warning("未曾连接服务器，无法操作！");
-    }
-};
-
 /**
  * 获取id
  */
@@ -233,4 +227,4 @@ window.onbeforeunload = function () {
 };
 
 // 导出
-export {initWebSocket, sendMsg, closeWebsocket, setMessageListener, isConnect, checkConnectStatus, getWsUserId}
+export {initWebSocket, sendMsg, closeWebsocket, setMessageListener, isConnect, getWsUserId}

@@ -1,10 +1,15 @@
 package com.fengx.saltedfish.server;
 
 import com.fengx.saltedfish.common.exception.WarnException;
-import com.fengx.saltedfish.model.GameRoomInfo;
-import com.fengx.saltedfish.model.NettyMessage;
-import com.fengx.saltedfish.model.NettyMsgTypeEnum;
-import com.fengx.saltedfish.model.RoomTypeEnum;
+import com.fengx.saltedfish.model.entity.GameRoomInfo;
+import com.fengx.saltedfish.model.entity.LandlordsGameInfo;
+import com.fengx.saltedfish.model.entity.NettyMessage;
+import com.fengx.saltedfish.model.enums.NettyMsgTypeEnum;
+import com.fengx.saltedfish.model.enums.RoomTypeEnum;
+import com.fengx.saltedfish.model.param.GetGameInfoParam;
+import com.fengx.saltedfish.model.vo.LandlordsGameInfoVO;
+import com.fengx.saltedfish.utils.JsonUtil;
+import com.fengx.saltedfish.utils.LandlordsUtil;
 import com.fengx.saltedfish.utils.RandomUtil;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
@@ -22,9 +27,10 @@ public class GameManageServer {
         private static final GameManageServer INSTANCE = new GameManageServer();
     }
 
-    private GameManageServer(){}
+    private GameManageServer() {
+    }
 
-    public static GameManageServer getInstance(){
+    public static GameManageServer getInstance() {
         return GameManageServer.Inner.INSTANCE;
     }
 
@@ -39,6 +45,11 @@ public class GameManageServer {
      * k:userId v:roomId
      */
     private static final Map<String, String> ROOM_USER = new Hashtable<>();
+
+    /**
+     * k.房间id v.斗地主游戏信息
+     */
+    private static final Map<String, LandlordsGameInfo> LANDLORDS_MAP = new Hashtable<>();
 
     /**
      * 检查用户是否已经加入房间了
@@ -147,6 +158,26 @@ public class GameManageServer {
                 if (gameRoomInfo.getRoomTypeEnum().equals(RoomTypeEnum.LANDLORDS)) {
                     if (gameRoomInfo.getUserIds().size() == 3) {
                         gameRoomInfo.setPlaying(true);
+                        // 发牌
+                        LandlordsGameInfo gameInfo = new LandlordsGameInfo();
+                        List<List<String>> cards = LandlordsUtil.dealCards();
+                        HashMap<String, List<String>> hashMap = new HashMap<>(4);
+                        HashMap<String, Integer> sortMap = new HashMap<>(3);
+                        int i = 0;
+                        for (String id : gameRoomInfo.getUserIds()) {
+                            hashMap.put(id, cards.get(i));
+                            sortMap.put(id, (i + 1));
+                            if (i == 0) {
+                                gameInfo.setLog("玩家" + id + "开始叫地主\n");
+                            }
+                            i++;
+                        }
+                        gameInfo.setAlreadyOutCards(new ArrayList<>());
+                        gameInfo.setDipai(cards.get(3));
+                        gameInfo.setHandCards(hashMap);
+                        gameInfo.setLandlord(null);
+                        gameInfo.setSorts(sortMap);
+                        LANDLORDS_MAP.put(roomId, gameInfo);
                         // 通知开始游戏
                         NettyMessage begin = new NettyMessage();
                         begin.setMsgType(NettyMsgTypeEnum.BEGIN_GAME);
@@ -157,5 +188,24 @@ public class GameManageServer {
             return add;
         }
         return false;
+    }
+
+    /**
+     * 获取游戏相关信息
+     */
+    public String getGameInfo(GetGameInfoParam param) {
+        if (param.getRoomType().equals(RoomTypeEnum.LANDLORDS)) {
+            LandlordsGameInfo landlordsGameInfo = LANDLORDS_MAP.get(param.getRoomId());
+            if (landlordsGameInfo != null) {
+                LandlordsGameInfoVO vo = new LandlordsGameInfoVO();
+                List<String> strings = landlordsGameInfo.getHandCards().get(param.getWsUserId());
+                vo.setSort(landlordsGameInfo.getSorts().get(param.getWsUserId()));
+                vo.setHandCards(strings);
+                vo.setLog(landlordsGameInfo.getLog());
+                vo.setLandlord(landlordsGameInfo.getLandlord());
+                return JsonUtil.object2Json(vo);
+            }
+        }
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-package com.fengx.saltedfish.model;
+package com.fengx.saltedfish.model.enums;
 
 /**
  * 房间类型

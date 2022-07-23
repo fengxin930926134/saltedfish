@@ -28,6 +28,10 @@ export default new Router({
 				path: '/room',
 				name: 'room',
 				component: () => import('./views/room.vue')
+			},{
+				path: '/landlords',
+				name: 'landlords',
+				component: () => import('./views/landlords.vue')
 			},]
 		},
 		{ // 重定向

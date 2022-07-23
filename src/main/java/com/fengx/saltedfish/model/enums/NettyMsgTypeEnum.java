@@ -1,4 +1,4 @@
-package com.fengx.saltedfish.model;
+package com.fengx.saltedfish.model.enums;
 
 /**
  * 消息类型
@@ -29,4 +29,9 @@ public enum NettyMsgTypeEnum {
      * 开始游戏
      */
     BEGIN_GAME,
+
+    /**
+     * 获取游戏信息
+     */
+    GET_GAME_INFO,
 }

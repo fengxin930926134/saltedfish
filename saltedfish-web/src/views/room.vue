@@ -61,7 +61,7 @@
 </template>
 
 <script>
-    import {sendMsg, setMessageListener, checkConnectStatus, getWsUserId} from '../plugins/websocket'
+    import {setMessageListener, isConnect, getWsUserId} from '../plugins/websocket'
 
     export default {
         data() {
@@ -98,7 +98,8 @@
                             this.roomCurrentNumber = e.datas.userIds.length;
                             this.dialogVisible = true;
                         } else {
-                            // TODO 重连游戏
+                            // 重连游戏
+                            this.beginGame();
                         }
                     }
                 });
@@ -109,13 +110,17 @@
             fetchData() {
                 if (this.$route.query.id == null) {
                     this.goBack();
-                }
-                checkConnectStatus();
-                this.$axios.get("/netty/roomList/" + this.$route.query.id).then((e) => {
-                    if (e && e.datas) {
-                        this.tableData = e.datas
+                } else {
+                    if (!isConnect()) {
+                        this.$message.warning("未曾连接服务器，无法操作！");
+                    } else {
+                        this.$axios.get("/netty/roomList/" + this.$route.query.id).then((e) => {
+                            if (e && e.datas) {
+                                this.tableData = e.datas
+                            }
+                        });
                     }
-                });
+                }
             },
             quitRoom() {
                 if (this.roomId) {
@@ -172,6 +177,16 @@
                     }
                 });
             },
+            // 跳转到游戏界面
+            beginGame() {
+                switch (this.$route.query.id) {
+                    case "LANDLORDS":
+                        this.$router.push({ path: '/landlords', query: { roomId: this.roomId } });
+                        break;
+                    default:
+                        this.$message.error("进入游戏异常")
+                }
+            }
         },
         created() {
             this.inspectJoinRoom();
@@ -206,6 +221,10 @@
                         if (!this.dialogVisible) {
                             this.dialogVisible = true
                         }
+                    }
+                        break;
+                    case "BEGIN_GAME": {
+                        this.beginGame();
                     }
                         break;
                     default:

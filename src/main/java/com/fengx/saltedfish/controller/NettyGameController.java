@@ -2,6 +2,7 @@ package com.fengx.saltedfish.controller;
 
 import com.fengx.saltedfish.common.response.Response;
 import com.fengx.saltedfish.model.param.CreateRoomParam;
+import com.fengx.saltedfish.model.param.GetGameInfoParam;
 import com.fengx.saltedfish.model.param.RoomParam;
 import com.fengx.saltedfish.service.NettyGameService;
 import lombok.RequiredArgsConstructor;
@@ -41,4 +42,8 @@ public class NettyGameController {
         return nettyGameService.inspectJoinRoom(userId);
     }
 
+    @PostMapping(value = "/getGameInfo")
+    public Response getGameInfo(@Valid @RequestBody GetGameInfoParam param) {
+        return nettyGameService.getGameInfo(param);
+    }
 }

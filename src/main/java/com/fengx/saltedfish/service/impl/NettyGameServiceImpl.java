@@ -4,14 +4,18 @@ import com.fengx.saltedfish.common.exception.WarnException;
 import com.fengx.saltedfish.common.response.ObjectResponse;
 import com.fengx.saltedfish.common.response.Response;
 import com.fengx.saltedfish.common.response.SuccessResponse;
-import com.fengx.saltedfish.model.GameRoomInfo;
-import com.fengx.saltedfish.model.RoomTypeEnum;
+import com.fengx.saltedfish.model.entity.GameRoomInfo;
+import com.fengx.saltedfish.model.entity.NettyMessage;
+import com.fengx.saltedfish.model.enums.NettyMsgTypeEnum;
+import com.fengx.saltedfish.model.enums.RoomTypeEnum;
 import com.fengx.saltedfish.model.param.CreateRoomParam;
+import com.fengx.saltedfish.model.param.GetGameInfoParam;
 import com.fengx.saltedfish.model.param.RoomParam;
 import com.fengx.saltedfish.server.GameManageServer;
 import com.fengx.saltedfish.server.NettyHandlerServer;
 import com.fengx.saltedfish.service.NettyGameService;
 import com.fengx.saltedfish.utils.CopyUtil;
+import com.fengx.saltedfish.utils.JsonUtil;
 import com.google.common.collect.Sets;
 import io.netty.channel.ChannelHandlerContext;
 import org.springframework.stereotype.Service;
@@ -68,5 +72,11 @@ public class NettyGameServiceImpl implements NettyGameService {
             return new ObjectResponse<>(GameManageServer.getInstance().getRoomInfo(roomId));
         }
         return new ObjectResponse<>(null);
+    }
+
+    @Override
+    public Response getGameInfo(GetGameInfoParam param) {
+        String gameInfo = GameManageServer.getInstance().getGameInfo(param);
+        return new ObjectResponse<>(gameInfo);
     }
 }

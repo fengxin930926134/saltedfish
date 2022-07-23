@@ -1,7 +1,7 @@
 package com.fengx.saltedfish.server;
 
-import com.fengx.saltedfish.model.NettyMessage;
-import com.fengx.saltedfish.model.NettyMsgTypeEnum;
+import com.fengx.saltedfish.model.entity.NettyMessage;
+import com.fengx.saltedfish.model.enums.NettyMsgTypeEnum;
 import com.fengx.saltedfish.utils.CopyUtil;
 import com.fengx.saltedfish.utils.JsonUtil;
 import com.fengx.saltedfish.utils.RandomUtil;

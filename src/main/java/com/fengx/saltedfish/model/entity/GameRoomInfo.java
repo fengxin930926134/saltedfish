@@ -1,5 +1,6 @@
-package com.fengx.saltedfish.model;
+package com.fengx.saltedfish.model.entity;
 
+import com.fengx.saltedfish.model.enums.RoomTypeEnum;
 import lombok.Data;
 
 import java.util.Set;
