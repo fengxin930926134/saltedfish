@@ -112,7 +112,7 @@ public class NettyGameServiceImpl implements NettyGameService {
         if (zong == 0) {
             if (param.getIsBeLandlord()) {
                 // 叫地主
-                beLandlordsMap[sort] = weight + 1;
+                beLandlordsMap[sort - 1] = weight + 1;
                 zong++;
                 content = "玩家 " + param.getUserId() + " 叫地主";
             } else {
@@ -122,7 +122,7 @@ public class NettyGameServiceImpl implements NettyGameService {
         } else {
             if (param.getIsBeLandlord()) {
                 // 抢地主
-                beLandlordsMap[sort] = weight + 1;
+                beLandlordsMap[sort - 1] = weight + 1;
                 zong++;
                 content = "玩家 " + param.getUserId() + " 抢地主";
             } else {
@@ -130,6 +130,7 @@ public class NettyGameServiceImpl implements NettyGameService {
                 content = "玩家 " + param.getUserId() + " 不抢地主";
             }
         }
+        landlordsGameInfo.getLog().add(content);
         GameManageServer.getInstance().pushLog(content, landlordsGameInfo.getHandCards().keySet());
 
         // 判断这次操作后的结局
@@ -143,9 +144,32 @@ public class NettyGameServiceImpl implements NettyGameService {
                 break;
             case 1:
                 if (sort == 3) {
-                    // 设置序号1为地主
+                    if (param.getIsBeLandlord()) {
+                        landlordsGameInfo.setLandlord(param.getUserId());
+                    } else {
+                        int be = 1;
+                        if (beLandlordsMap[1] > 0) {
+                            be = 2;
+                        }
+                        int finalBe = be;
+                        landlordsGameInfo.getSorts().forEach((userId, index) -> {
+                            if (index == finalBe) {
+                                landlordsGameInfo.setLandlord(userId);
+                            }
+                        });
+                    }
+                }
+                break;
+            case 2:
+                if (sort == 1) {
+                    // 说明有人抢了但1没抢
+                    int be = 3;
+                    if (beLandlordsMap[1] > 0) {
+                        be = 2;
+                    }
+                    int finalBe = be;
                     landlordsGameInfo.getSorts().forEach((userId, index) -> {
-                        if (index == 1) {
+                        if (index == finalBe) {
                             landlordsGameInfo.setLandlord(userId);
                         }
                     });

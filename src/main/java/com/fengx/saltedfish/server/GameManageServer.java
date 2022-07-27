@@ -126,11 +126,14 @@ public class GameManageServer {
         Set<String> userIds = landlordsGameInfo.getHandCards().keySet();
         // 通知地主是 通知底牌
         String collect = String.join("、", landlordsGameInfo.getDipai());
-        pushLog("地主是玩家" + landlordsGameInfo.getLandlord() + "\n底牌是 " + collect, userIds);
+        String log = "地主是玩家" + landlordsGameInfo.getLandlord() + "\n底牌是 " + collect;
+        landlordsGameInfo.getLog().add(log);
+        pushLog(log, userIds);
         // 更新出牌顺序，把底牌加入该玩家手里
         Integer sort = landlordsGameInfo.getSorts().get(landlordsGameInfo.getLandlord());
         setCurrentSort(landlordsGameInfo.getCurrentNumberMap(), sort);
         landlordsGameInfo.getHandCards().get(landlordsGameInfo.getLandlord()).addAll(landlordsGameInfo.getDipai());
+        landlordsGameInfo.getHandCards().get(landlordsGameInfo.getLandlord()).sort(LandlordsUtil.comparator);
         // 发送出牌开始通知以及携带相关信息，把底牌加入玩家手里
         NettyMessage message = new NettyMessage();
         LandlordBeginPlayVO vo = new LandlordBeginPlayVO();
@@ -324,6 +327,7 @@ public class GameManageServer {
                     } else {
                         if (cnumber[0] > number) {
                             csort[0] = i;
+                            break;
                         }
                     }
                 }

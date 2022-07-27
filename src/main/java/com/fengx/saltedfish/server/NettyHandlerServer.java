@@ -136,19 +136,21 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
      */
     public void inspectNettyMsgSend(Integer interval) {
         if (interval != null && interval > 0) {
-            long timeMillis = System.currentTimeMillis();
-            Set<String> ids = new HashSet<>();
-            SEND_MSG_MAP.forEach((id, msg) -> {
-                if (msg.getSendTime() > timeMillis - interval) {
-                    if (MAP.containsKey(msg.getCtx())) {
-                        send(msg);
-                    } else {
-                        ids.add(id);
+            if (SEND_MSG_MAP.size() > 0) {
+                long timeMillis = System.currentTimeMillis();
+                Set<String> ids = new HashSet<>();
+                SEND_MSG_MAP.forEach((id, msg) -> {
+                    if (msg.getSendTime() > timeMillis - interval) {
+                        if (MAP.containsKey(msg.getCtx())) {
+                            send(msg);
+                        } else {
+                            ids.add(id);
+                        }
                     }
+                });
+                if (CollectionUtils.isNotEmpty(ids)) {
+                    ids.forEach(id -> log.info("移除未成功消息 -> " + SEND_MSG_MAP.remove(id)));
                 }
-            });
-            if (CollectionUtils.isNotEmpty(ids)) {
-                ids.forEach(id -> log.info("移除消息 -> " + SEND_MSG_MAP.remove(id)));
             }
         }
     }
