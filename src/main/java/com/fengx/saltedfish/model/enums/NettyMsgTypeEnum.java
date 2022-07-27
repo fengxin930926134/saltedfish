@@ -31,7 +31,17 @@ public enum NettyMsgTypeEnum {
     BEGIN_GAME,
 
     /**
-     * 获取游戏信息
+     * 推送日志
      */
-    GET_GAME_INFO,
+    PUSH_LOG,
+
+    /**
+     * 切换下一人操作
+     */
+    NEXT_OPERATION,
+
+    /**
+     * 开始出牌
+     */
+    LANDLORD_BEGIN_PLAY
 }

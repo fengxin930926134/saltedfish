@@ -81,7 +81,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
     }
 
     /**
-     * 给所有在线用户发送消息
+     * 给所有在线用户发送消息, 无需ctx
      *
      * @param message NettyMessage
      * @param ids userIds
@@ -130,6 +130,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
 
     /**
      * 检查消息是否正常发送，没有则重发
+     * TODO 还需要增加验证该类型消息是否需要重发，客户端也需要
      *
      * @param interval 毫秒
      */

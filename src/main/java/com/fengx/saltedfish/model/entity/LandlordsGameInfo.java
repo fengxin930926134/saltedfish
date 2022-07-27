@@ -40,4 +40,14 @@ public class LandlordsGameInfo {
      * 地主id
      */
     private String landlord;
+
+    /**
+     * 当前序号操作次数，决定操作顺序
+     */
+    private Map<Integer, Integer> currentNumberMap;
+
+    /**
+     * 当前操作的序号
+     */
+    private Integer currentSort;
 }

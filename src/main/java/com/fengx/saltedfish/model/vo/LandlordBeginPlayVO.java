@@ -4,19 +4,16 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * 开始出牌返回数据
+ */
 @Data
-public class LandlordsGameInfoVO {
-
-    private Integer sort;
-    /**
-     * 游戏日志
-     */
-    private List<String> log;
+public class LandlordBeginPlayVO {
 
     /**
-     * 手牌
+     * 3张底牌
      */
-    private List<String> handCards;
+    private List<String> dipai;
 
     /**
      * 地主id
