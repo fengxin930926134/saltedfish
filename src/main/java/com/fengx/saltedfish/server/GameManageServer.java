@@ -88,6 +88,20 @@ public class GameManageServer {
     }
 
     /**
+     * 游戏结束
+     */
+    public void gameOver(String roomId, Collection<String> ids) {
+        // 退出房间
+        LANDLORDS_MAP.remove(roomId);
+        ids.forEach(ROOM_USER::remove);
+        ROOM_MAP.forEach((k, v) -> v.remove(getRoomInfo(roomId)));
+        // 结束消息
+        NettyMessage message = new NettyMessage();
+        message.setMsgType(NettyMsgTypeEnum.GAME_OVER);
+        NettyHandlerServer.getInstance().sendAllMsgByIds(message, ids);
+    }
+
+    /**
      * 检查用户是否已经加入房间了
      *
      * @param userId userId

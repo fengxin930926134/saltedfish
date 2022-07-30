@@ -1,9 +1,9 @@
 <template>
     <div>
         <div class="pai-border m-b-20" style="height: 400px; overflow: auto;">
-            <p>&nbsp;</p>
-            <p v-for="(item, i) in gameData.log" v-bind:key="i">{{item}}</p>
-            <p ref="bt">&nbsp;</p>
+            <p class="m-b-20">&nbsp;</p>
+            <p class="m-b-20" v-for="(item, i) in gameData.log" v-bind:key="i">{{item}}</p>
+            <p class="m-b-20" ref="bt">&nbsp;</p>
         </div>
         <div class="cards m-b-20" v-if="!gameData.landlord && gameData.currentSort === gameData.sort">
             <el-button @click="beLandlord(true)">叫（抢）地主</el-button>
@@ -22,9 +22,9 @@
                  @click="cardsOnClick(i)">{{item}}
             </div>
         </div>
-        <div class="cards" v-if="gameData.landlord">
-            <el-button>出牌</el-button>
-            <el-button>过牌</el-button>
+        <div class="cards" v-if="gameData.landlord && gameData.currentSort === gameData.sort">
+            <el-button round type="primary" @click="playBrand(true)">出牌</el-button>
+            <el-button round @click="playBrand(false)">过牌</el-button>
         </div>
     </div>
 </template>
@@ -44,6 +44,32 @@
         },
         watch: {},
         methods: {
+            // 出牌
+            playBrand(is) {
+                let indexList = [];
+                this.isSelect.forEach((value, index) => {
+                    if (value) {
+                        indexList.push(index);
+                    }
+                });
+                let values = this.gameData.handCards.filter((value, index) => {
+                    return indexList.indexOf(index) !== -1
+                });
+                this.$axios.post("/netty/playBrand", {
+                    userId: this.userId,
+                    play: is,
+                    brand: values
+                }).then((e) => {
+                    if (e && e.status === 200) {
+                        this.gameData.handCards = this.gameData.handCards.filter((value, index) => {
+                            return indexList.indexOf(index) === -1
+                        });
+                        indexList.forEach(item => {
+                            this.$set(this.isSelect, item, false);
+                        });
+                    }
+                });
+            },
             // 叫地主和不叫地主
             beLandlord(is) {
                 this.$axios.post("/netty/beLandlord", {
@@ -81,11 +107,14 @@
             setMessageListener((obj) => {
                 if (obj) {
                     switch (obj.msgType) {
-                        case "PUSH_LOG":{
+                        case "PUSH_LOG": {
                             this.gameData.log.push(obj.content);
                             this.$refs.bt.scrollIntoView();
-                        }break;
-                        case "NEXT_OPERATION": this.gameData.currentSort = Number.parseInt(obj.content); break;
+                        }
+                            break;
+                        case "NEXT_OPERATION":
+                            this.gameData.currentSort = Number.parseInt(obj.content);
+                            break;
                         case "LANDLORD_BEGIN_PLAY": {
                             let p = JSON.parse(obj.content);
                             this.gameData.currentSort = p.currentSort;
@@ -93,12 +122,22 @@
                             if (p.landlord === this.userId) {
                                 this.getGameInfo();
                             }
-                        } break;
+                        }
+                            break;
+                        case "GAME_OVER": {
+                            this.$message.success("游戏结束, 3秒之后回到房间列表");
+                            setTimeout(() => {
+                                this.$router.push({ path: '/room', query: { id: "LANDLORDS" } })
+                            }, 3000)
+                        }
+                            break;
                         // 重开
-                        case "BEGIN_GAME":{
+                        case "BEGIN_GAME": {
                             this.getGameInfo();
-                        } break;
-                        default:console.error("未处理类型")
+                        }
+                            break;
+                        default:
+                            console.error("未处理类型")
                     }
                 }
             });

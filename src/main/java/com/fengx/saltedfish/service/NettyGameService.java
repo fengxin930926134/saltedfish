@@ -1,10 +1,7 @@
 package com.fengx.saltedfish.service;
 
 import com.fengx.saltedfish.common.response.Response;
-import com.fengx.saltedfish.model.param.BeLandlordParam;
-import com.fengx.saltedfish.model.param.CreateRoomParam;
-import com.fengx.saltedfish.model.param.GetGameInfoParam;
-import com.fengx.saltedfish.model.param.RoomParam;
+import com.fengx.saltedfish.model.param.*;
 
 public interface NettyGameService {
 
@@ -42,4 +39,9 @@ public interface NettyGameService {
      * 叫地主
      */
     Response beLandlord(BeLandlordParam param);
+
+    /**
+     * 地主出牌
+     */
+    Response playBrand(PlayBrandParam param);
 }

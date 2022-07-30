@@ -1,10 +1,7 @@
 package com.fengx.saltedfish.controller;
 
 import com.fengx.saltedfish.common.response.Response;
-import com.fengx.saltedfish.model.param.BeLandlordParam;
-import com.fengx.saltedfish.model.param.CreateRoomParam;
-import com.fengx.saltedfish.model.param.GetGameInfoParam;
-import com.fengx.saltedfish.model.param.RoomParam;
+import com.fengx.saltedfish.model.param.*;
 import com.fengx.saltedfish.service.NettyGameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -51,5 +48,10 @@ public class NettyGameController {
     @PostMapping(value = "/beLandlord")
     public Response beLandlord(@Valid @RequestBody BeLandlordParam param) {
         return nettyGameService.beLandlord(param);
+    }
+
+    @PostMapping(value = "/playBrand")
+    public Response playBrand(@Valid @RequestBody PlayBrandParam param) {
+        return nettyGameService.playBrand(param);
     }
 }

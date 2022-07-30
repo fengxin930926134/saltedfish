@@ -7,20 +7,16 @@ import com.fengx.saltedfish.common.response.SuccessResponse;
 import com.fengx.saltedfish.model.entity.GameRoomInfo;
 import com.fengx.saltedfish.model.entity.LandlordsGameInfo;
 import com.fengx.saltedfish.model.enums.RoomTypeEnum;
-import com.fengx.saltedfish.model.param.BeLandlordParam;
-import com.fengx.saltedfish.model.param.CreateRoomParam;
-import com.fengx.saltedfish.model.param.GetGameInfoParam;
-import com.fengx.saltedfish.model.param.RoomParam;
+import com.fengx.saltedfish.model.param.*;
 import com.fengx.saltedfish.server.GameManageServer;
 import com.fengx.saltedfish.server.NettyHandlerServer;
 import com.fengx.saltedfish.service.NettyGameService;
 import com.fengx.saltedfish.utils.CopyUtil;
 import com.google.common.collect.Sets;
 import io.netty.channel.ChannelHandlerContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class NettyGameServiceImpl implements NettyGameService {
@@ -92,14 +88,7 @@ public class NettyGameServiceImpl implements NettyGameService {
             throw new WarnException("未加入房间！");
         }
         LandlordsGameInfo landlordsGameInfo = GameManageServer.getInstance().getLandlordsGameInfo(roomId);
-        // 当前用户的序号
-        Integer sort = landlordsGameInfo.getSorts().get(param.getUserId());
-        if (sort == null) {
-            throw new WarnException("数据有误！");
-        }
-        if (!sort.equals(landlordsGameInfo.getCurrentSort())) {
-            throw new WarnException("还没到你操作！");
-        }
+        int sort = inspectUserOperate(landlordsGameInfo, param.getUserId());
         // 序号权重
         Integer[] beLandlordsMap = GameManageServer.getInstance().getBeLandlordsMap(roomId);
         int weight = beLandlordsMap[sort - 1];
@@ -198,5 +187,62 @@ public class NettyGameServiceImpl implements NettyGameService {
             GameManageServer.getInstance().landlordBeginPlay(roomId);
         }
         return new SuccessResponse();
+    }
+
+    @Override
+    public Response playBrand(PlayBrandParam param) {
+        String roomId = GameManageServer.getInstance().inspectUserJoinRoom(param.getUserId());
+        if (roomId == null) {
+            throw new WarnException("未加入房间！");
+        }
+        LandlordsGameInfo landlordsGameInfo = GameManageServer.getInstance().getLandlordsGameInfo(roomId);
+        inspectUserOperate(landlordsGameInfo, param.getUserId());
+        String content;
+        boolean gameOver = false;
+        if (param.getPlay()) {
+            // 出牌
+            if (CollectionUtils.isEmpty(param.getBrand())) {
+                throw new WarnException("至少选中一张牌！");
+            }
+            // TODO 检查是否合规
+            landlordsGameInfo.getHandCards().get(param.getUserId()).removeAll(param.getBrand());
+            int size = landlordsGameInfo.getHandCards().get(param.getUserId()).size();
+            content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + "  [剩余" + size +"张牌]";
+            // 如果出完牌了则游戏结束
+            gameOver = size == 0;
+        } else {
+            // 如果是刚开始出牌则必须出
+            if (landlordsGameInfo.getHandCards().get(param.getUserId()).size() > 17) {
+                throw new WarnException("必须出牌！");
+            }
+            content = param.getUserId() + "过牌";
+        }
+        landlordsGameInfo.getLog().add(content);
+        GameManageServer.getInstance().pushLog(content, landlordsGameInfo.getHandCards().keySet());
+
+        if (gameOver) {
+            content = param.getUserId() + "取得胜利";
+            landlordsGameInfo.getLog().add(content);
+            GameManageServer.getInstance().pushLog(content, landlordsGameInfo.getHandCards().keySet());
+            GameManageServer.getInstance().gameOver(roomId, landlordsGameInfo.getHandCards().keySet());
+            // 退出房间
+        } else {
+            GameManageServer.getInstance().nextOperation(landlordsGameInfo.getCurrentNumberMap(),
+                    landlordsGameInfo.getHandCards().keySet());
+        }
+
+        return new SuccessResponse();
+    }
+
+    private Integer inspectUserOperate(LandlordsGameInfo landlordsGameInfo, String userId) {
+        // 当前用户的序号
+        Integer sort = landlordsGameInfo.getSorts().get(userId);
+        if (sort == null) {
+            throw new WarnException("数据有误！");
+        }
+        if (!sort.equals(landlordsGameInfo.getCurrentSort())) {
+            throw new WarnException("还没到你操作！");
+        }
+        return sort;
     }
 }

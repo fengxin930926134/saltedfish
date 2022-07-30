@@ -43,5 +43,10 @@ public enum NettyMsgTypeEnum {
     /**
      * 开始出牌
      */
-    LANDLORD_BEGIN_PLAY
+    LANDLORD_BEGIN_PLAY,
+
+    /**
+     * 游戏结束
+     */
+    GAME_OVER,
 }
