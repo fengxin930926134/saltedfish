@@ -6,20 +6,31 @@ import com.fengx.saltedfish.common.response.Response;
 import com.fengx.saltedfish.common.response.SuccessResponse;
 import com.fengx.saltedfish.model.entity.GameRoomInfo;
 import com.fengx.saltedfish.model.entity.LandlordsGameInfo;
+import com.fengx.saltedfish.model.entity.NettyMessage;
+import com.fengx.saltedfish.model.enums.NettyMsgTypeEnum;
 import com.fengx.saltedfish.model.enums.RoomTypeEnum;
 import com.fengx.saltedfish.model.param.*;
 import com.fengx.saltedfish.server.GameManageServer;
 import com.fengx.saltedfish.server.NettyHandlerServer;
 import com.fengx.saltedfish.service.NettyGameService;
 import com.fengx.saltedfish.utils.CopyUtil;
+import com.fengx.saltedfish.utils.LandlordsUtil;
+import com.fengx.saltedfish.utils.TimerUtil;
 import com.google.common.collect.Sets;
 import io.netty.channel.ChannelHandlerContext;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 @Service
+@RequiredArgsConstructor
 public class NettyGameServiceImpl implements NettyGameService {
+
+    private final TimerUtil timerUtil;
 
     @Override
     public Response roomList(String roomTypeEnum) {
@@ -178,10 +189,14 @@ public class NettyGameServiceImpl implements NettyGameService {
             default:
         }
 
+        // 停止上一个倒计时
+        if (landlordsGameInfo.getTimerId() != null) {
+            timerUtil.stopTask(landlordsGameInfo.getTimerId());
+            landlordsGameInfo.setTimerId(null);
+        }
         // 未决出地主则切换下一人操作
         if (StringUtils.isBlank(landlordsGameInfo.getLandlord())) {
-            GameManageServer.getInstance().nextOperation(landlordsGameInfo.getCurrentNumberMap(),
-                    landlordsGameInfo.getHandCards().keySet());
+            nextOperation(landlordsGameInfo);
         } else {
             // 决定出地主，通知开始出牌，设置地主开始出牌
             GameManageServer.getInstance().landlordBeginPlay(roomId);
@@ -204,14 +219,21 @@ public class NettyGameServiceImpl implements NettyGameService {
             if (CollectionUtils.isEmpty(param.getBrand())) {
                 throw new WarnException("至少选中一张牌！");
             }
-            // TODO 检查是否合规
+            // 检查是否合规
+            if (!LandlordsUtil.validationRules(param.getBrand(), landlordsGameInfo.getCurrentAlreadyOutCards())) {
+                throw new WarnException("出牌不合规则！");
+            }
+            // 把牌出掉
             landlordsGameInfo.getHandCards().get(param.getUserId()).removeAll(param.getBrand());
             int size = landlordsGameInfo.getHandCards().get(param.getUserId()).size();
-            content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + "  [剩余" + size +"张牌]";
+            content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + "  [剩余" + size + "张牌]";
+            // 更新已出牌序号和牌组
+            landlordsGameInfo.setCurrentOutCardSort(landlordsGameInfo.getCurrentSort());
+            landlordsGameInfo.setCurrentAlreadyOutCards(param.getBrand());
             // 如果出完牌了则游戏结束
             gameOver = size == 0;
         } else {
-            // 如果是刚开始出牌则必须出
+            // TODO 判断是否必须出牌
             if (landlordsGameInfo.getHandCards().get(param.getUserId()).size() > 17) {
                 throw new WarnException("必须出牌！");
             }
@@ -220,6 +242,11 @@ public class NettyGameServiceImpl implements NettyGameService {
         landlordsGameInfo.getLog().add(content);
         GameManageServer.getInstance().pushLog(content, landlordsGameInfo.getHandCards().keySet());
 
+        // 停止上一个倒计时
+        if (landlordsGameInfo.getTimerId() != null) {
+            timerUtil.stopTask(landlordsGameInfo.getTimerId());
+            landlordsGameInfo.setTimerId(null);
+        }
         if (gameOver) {
             content = param.getUserId() + "取得胜利";
             landlordsGameInfo.getLog().add(content);
@@ -227,8 +254,7 @@ public class NettyGameServiceImpl implements NettyGameService {
             GameManageServer.getInstance().gameOver(roomId, landlordsGameInfo.getHandCards().keySet());
             // 退出房间
         } else {
-            GameManageServer.getInstance().nextOperation(landlordsGameInfo.getCurrentNumberMap(),
-                    landlordsGameInfo.getHandCards().keySet());
+            nextOperation(landlordsGameInfo);
         }
 
         return new SuccessResponse();
@@ -244,5 +270,35 @@ public class NettyGameServiceImpl implements NettyGameService {
             throw new WarnException("还没到你操作！");
         }
         return sort;
+    }
+
+    /**
+     * TODO 还需要处理超时执行的对应操作，如果在叫地主，则默认不叫，如果是出牌人，必须出牌时则随便出一张，不时则过牌
+     * @param landlordsGameInfo
+     */
+    private void nextOperation(LandlordsGameInfo landlordsGameInfo) {
+        GameManageServer.getInstance().nextOperation(landlordsGameInfo.getCurrentNumberMap(),
+                landlordsGameInfo.getHandCards().keySet(), (nextSort) -> {
+                    AtomicReference<String> id = new AtomicReference<>(null);
+                    AtomicInteger i = new AtomicInteger(15);
+                    landlordsGameInfo.getSorts().forEach((userId, sort) -> {
+                        if (sort.equals(nextSort)) {
+                            id.set(userId);
+                        }
+                    });
+                    // 通知
+                    if (id.get() != null) {
+                        landlordsGameInfo.setTimerId(timerUtil.startTask(() -> {
+                            NettyMessage message = new NettyMessage();
+                            message.setContent(id.get() + "开始操作，倒计时" + i.get() + "秒");
+                            message.setMsgType(NettyMsgTypeEnum.COUNT_DOWN);
+                            NettyHandlerServer.getInstance().sendAllMsgByIds(message, landlordsGameInfo.getHandCards().keySet());
+                            i.getAndDecrement();
+                        }, 1200, 15 * 1200, () -> {
+                            // 如果当前是出牌人则结束以后切换下一个操作
+                            nextOperation(landlordsGameInfo);
+                        }));
+                    }
+                });
     }
 }

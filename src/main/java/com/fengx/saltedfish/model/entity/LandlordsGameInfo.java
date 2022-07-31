@@ -27,9 +27,14 @@ public class LandlordsGameInfo {
     private Map<String, Integer> sorts;
 
     /**
-     * 已经出的牌
+     * 当前已经出的牌
      */
-    private List<String> alreadyOutCards;
+    private List<String> currentAlreadyOutCards;
+
+    /**
+     * 当前已出牌的序号，过牌不算出牌
+     */
+    private Integer currentOutCardSort;
 
     /**
      * 3张底牌
@@ -50,4 +55,9 @@ public class LandlordsGameInfo {
      * 当前操作的序号
      */
     private Integer currentSort;
+
+    /**
+     * 倒计时id
+     */
+    private String timerId;
 }

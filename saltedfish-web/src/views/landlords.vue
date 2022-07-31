@@ -3,6 +3,7 @@
         <div class="pai-border m-b-20" style="height: 400px; overflow: auto;">
             <p class="m-b-20">&nbsp;</p>
             <p class="m-b-20" v-for="(item, i) in gameData.log" v-bind:key="i">{{item}}</p>
+            <p class="m-b-20">{{countDownText}}</p>
             <p class="m-b-20" ref="bt">&nbsp;</p>
         </div>
         <div class="cards m-b-20" v-if="!gameData.landlord && gameData.currentSort === gameData.sort">
@@ -40,6 +41,8 @@
                 isSelect: [],
                 // 游戏数据
                 gameData: {},
+                // 倒计时text
+                countDownText: ""
             }
         },
         watch: {},
@@ -93,6 +96,7 @@
                         roomType: "LANDLORDS"
                     }).then((e) => {
                         if (e && e.status === 200) {
+                            this.countDownText = "";
                             this.gameData = JSON.parse(e.datas);
                         } else {
                             this.$router.push("/index")
@@ -115,6 +119,9 @@
                         case "NEXT_OPERATION":
                             this.gameData.currentSort = Number.parseInt(obj.content);
                             break;
+                        case "COUNT_DOWN":
+                            this.countDownText = obj.content;
+                            break;
                         case "LANDLORD_BEGIN_PLAY": {
                             let p = JSON.parse(obj.content);
                             this.gameData.currentSort = p.currentSort;
@@ -125,9 +132,10 @@
                         }
                             break;
                         case "GAME_OVER": {
+                            this.countDownText = "";
                             this.$message.success("游戏结束, 3秒之后回到房间列表");
                             setTimeout(() => {
-                                this.$router.push({ path: '/room', query: { id: "LANDLORDS" } })
+                                this.$router.push({path: '/room', query: {id: "LANDLORDS"}})
                             }, 3000)
                         }
                             break;

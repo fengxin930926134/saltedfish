@@ -130,7 +130,6 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
 
     /**
      * 检查消息是否正常发送，没有则重发
-     * TODO 还需要增加验证该类型消息是否需要重发，客户端也需要
      *
      * @param interval 毫秒
      */
@@ -140,7 +139,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
                 long timeMillis = System.currentTimeMillis();
                 Set<String> ids = new HashSet<>();
                 SEND_MSG_MAP.forEach((id, msg) -> {
-                    if (msg.getSendTime() > timeMillis - interval) {
+                    if (!msg.getMsgType().equals(NettyMsgTypeEnum.COUNT_DOWN) && msg.getSendTime() > timeMillis - interval) {
                         if (MAP.containsKey(msg.getCtx())) {
                             send(msg);
                         } else {
@@ -149,7 +148,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
                     }
                 });
                 if (CollectionUtils.isNotEmpty(ids)) {
-                    ids.forEach(id -> log.info("移除未成功消息 -> " + SEND_MSG_MAP.remove(id)));
+                    ids.forEach(id -> log.info("移除未收回复消息 -> " + SEND_MSG_MAP.remove(id)));
                 }
             }
         }

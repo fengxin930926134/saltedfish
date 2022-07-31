@@ -36,6 +36,11 @@ public enum NettyMsgTypeEnum {
     PUSH_LOG,
 
     /**
+     * 倒计时消息
+     */
+    COUNT_DOWN,
+
+    /**
      * 切换下一人操作
      */
     NEXT_OPERATION,

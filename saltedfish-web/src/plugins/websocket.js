@@ -159,6 +159,11 @@ let websocketonmessage = e => {
         let obj = JSON.parse(e.data);
         if (obj.msgType === "REPLY") {
             msgMap.delete(obj.msgId);
+        } else if (obj.msgType === "COUNT_DOWN") {
+            // 倒计时不回复
+            if (websocket_callback) {
+                websocket_callback(obj)
+            }
         } else {
             // 回复
             let copy = JSON.parse(JSON.stringify(obj));

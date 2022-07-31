@@ -62,17 +62,30 @@ public class GameManageServer {
     private static final Map<String, Integer[]> BE_LANDLORDS_MAP = new Hashtable<>();
 
     /**
+     * 切换下一位需要执行的操作
+     */
+    @FunctionalInterface
+    public interface Operation {
+
+        void run(Integer nextSort);
+    }
+
+    /**
      * 切换下一位操作
      */
-    public void nextOperation(Map<Integer, Integer> currentNumberMap, Collection<String> ids) {
+    public void nextOperation(Map<Integer, Integer> currentNumberMap, Collection<String> ids, Operation operation) {
         Integer currentSort = getCurrentSort(currentNumberMap);
         Integer integer = currentNumberMap.get(currentSort);
         currentNumberMap.put(currentSort, ++integer);
         // 通知
         NettyMessage message = new NettyMessage();
-        message.setContent(getCurrentSort(currentNumberMap).toString());
+        Integer sort = getCurrentSort(currentNumberMap);
+        message.setContent(sort.toString());
         message.setMsgType(NettyMsgTypeEnum.NEXT_OPERATION);
         NettyHandlerServer.getInstance().sendAllMsgByIds(message, ids);
+        if (operation != null) {
+            operation.run(sort);
+        }
     }
 
     /**
@@ -314,7 +327,6 @@ public class GameManageServer {
             }
             i++;
         }
-        gameInfo.setAlreadyOutCards(new ArrayList<>());
         gameInfo.setDipai(cards.get(3));
         gameInfo.setHandCards(hashMap);
         gameInfo.setLandlord(null);
