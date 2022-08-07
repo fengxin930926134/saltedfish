@@ -14,6 +14,7 @@ import com.fengx.saltedfish.server.GameManageServer;
 import com.fengx.saltedfish.server.NettyHandlerServer;
 import com.fengx.saltedfish.service.NettyGameService;
 import com.fengx.saltedfish.utils.CopyUtil;
+import com.fengx.saltedfish.utils.JsonUtil;
 import com.fengx.saltedfish.utils.LandlordsUtil;
 import com.fengx.saltedfish.utils.TimerUtil;
 import com.google.common.collect.Lists;
@@ -226,7 +227,7 @@ public class NettyGameServiceImpl implements NettyGameService {
                 throw new WarnException("出牌不合规则！");
             }
             // 把牌出掉
-            landlordsGameInfo.getHandCards().get(param.getUserId()).removeAll(param.getBrand());
+            param.getBrand().forEach(item -> landlordsGameInfo.getHandCards().get(param.getUserId()).remove(item));
             int size = landlordsGameInfo.getHandCards().get(param.getUserId()).size();
             content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + "  [剩余" + size + "张牌]";
             // 更新已出牌序号和牌组
@@ -235,9 +236,6 @@ public class NettyGameServiceImpl implements NettyGameService {
             // 如果出完牌了则游戏结束
             gameOver = size == 0;
         } else {
-//            if (landlordsGameInfo.getHandCards().get(param.getUserId()).size() > 17) {
-//                throw new WarnException("必须出牌！");
-//            }
             if (landlordsGameInfo.getCurrentOutCardSort() == null ||
                     landlordsGameInfo.getCurrentOutCardSort().equals(landlordsGameInfo.getCurrentSort())) {
                 throw new WarnException("先手出牌，不能过牌！");
@@ -308,14 +306,20 @@ public class NettyGameServiceImpl implements NettyGameService {
                                 param.setUserId(id.get());
                                 // 是出牌人
                                 if (landlordsGameInfo.getCurrentOutCardSort() == null ||
-                                        landlordsGameInfo.getCurrentOutCardSort().equals(landlordsGameInfo.getCurrentSort())) {
+                                        landlordsGameInfo.getCurrentOutCardSort().equals(nextSort)) {
                                     param.setBrand(Lists.newArrayList(landlordsGameInfo.getHandCards().get(id.get()).get(0)));
                                     param.setPlay(true);
+                                    playBrand(param);
+                                    // 更新页面牌组
+                                    NettyMessage message = new NettyMessage();
+                                    message.setContent(JsonUtil.list2Json(landlordsGameInfo.getHandCards().get(id.get())));
+                                    message.setMsgType(NettyMsgTypeEnum.LANDLORD_AUTO_PLAY);
+                                    NettyHandlerServer.getInstance().sendAllMsgByIds(message, Sets.newHashSet(id.get()));
                                 } else {
                                     // 过牌
                                     param.setPlay(false);
+                                    playBrand(param);
                                 }
-                                playBrand(param);
                             }
                         }));
                     }

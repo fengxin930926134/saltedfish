@@ -41,6 +41,11 @@ public enum NettyMsgTypeEnum {
     COUNT_DOWN,
 
     /**
+     * 斗地主自动出牌
+     */
+    LANDLORD_AUTO_PLAY,
+
+    /**
      * 切换下一人操作
      */
     NEXT_OPERATION,

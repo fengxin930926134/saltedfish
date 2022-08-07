@@ -122,6 +122,9 @@
                         case "COUNT_DOWN":
                             this.countDownText = obj.content;
                             break;
+                        case "LANDLORD_AUTO_PLAY":
+                            this.gameData.handCards = JSON.parse(obj.content);
+                            break;
                         case "LANDLORD_BEGIN_PLAY": {
                             let p = JSON.parse(obj.content);
                             this.gameData.currentSort = p.currentSort;
