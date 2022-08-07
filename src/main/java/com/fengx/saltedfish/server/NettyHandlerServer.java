@@ -195,6 +195,7 @@ public class NettyHandlerServer extends SimpleChannelInboundHandler<TextWebSocke
         log.info("receive {} -> {}", remoteAddress, message.text());
         if (!MAP.containsKey(ctx)) {
             log.error("ip:" + remoteAddress + " 不存在此数据，断开连接...");
+            MAP.remove(ctx);
             ctx.close();
         }
         try {
