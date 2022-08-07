@@ -26,8 +26,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,7 +76,16 @@ public class NettyGameServiceImpl implements NettyGameService {
 
     @Override
     public Response joinRoom(RoomParam param) {
-        if (!GameManageServer.getInstance().joinRoom(param.getRoomId(), param.getWsUserId())) {
+        if (!GameManageServer.getInstance().joinRoom(param.getRoomId(), param.getWsUserId(), (gameInfo) -> {
+            if (gameInfo instanceof LandlordsGameInfo) {
+                LandlordsGameInfo landlordsGameInfo = (LandlordsGameInfo) gameInfo;
+                startLandlordCountdown(landlordsGameInfo.getSorts().entrySet().stream()
+                                .filter(e -> e.getValue().equals(landlordsGameInfo.getCurrentSort()))
+                        .map(Map.Entry::getKey).collect(Collectors.toList()).get(0),
+                        landlordsGameInfo.getCurrentSort(),
+                        landlordsGameInfo);
+            }
+        })) {
             throw new WarnException("加入失败！");
         }
         return new SuccessResponse();
@@ -199,10 +210,11 @@ public class NettyGameServiceImpl implements NettyGameService {
         stopLandlordCountdown(landlordsGameInfo);
         // 未决出地主则切换下一人操作
         if (StringUtils.isBlank(landlordsGameInfo.getLandlord())) {
-            landlordNextOperation(roomId, landlordsGameInfo);
+            landlordNextOperation(landlordsGameInfo);
         } else {
             // 决定出地主，通知开始出牌，设置地主开始出牌
             GameManageServer.getInstance().landlordBeginPlay(roomId);
+            startLandlordCountdown(landlordsGameInfo.getLandlord(), landlordsGameInfo.getCurrentSort(), landlordsGameInfo);
         }
         return new SuccessResponse();
     }
@@ -254,7 +266,7 @@ public class NettyGameServiceImpl implements NettyGameService {
             GameManageServer.getInstance().gameOver(roomId, landlordsGameInfo.getHandCards().keySet());
             // 退出房间
         } else {
-            landlordNextOperation(roomId, landlordsGameInfo);
+            landlordNextOperation(landlordsGameInfo);
         }
 
         return new SuccessResponse();
@@ -275,55 +287,60 @@ public class NettyGameServiceImpl implements NettyGameService {
     /**
      * 下一位开始操作
      */
-    private void landlordNextOperation(String roomId, LandlordsGameInfo landlordsGameInfo) {
+    private void landlordNextOperation(LandlordsGameInfo landlordsGameInfo) {
         GameManageServer.getInstance().nextOperation(landlordsGameInfo.getCurrentNumberMap(),
                 landlordsGameInfo.getHandCards().keySet(), (nextSort) -> {
                     AtomicReference<String> id = new AtomicReference<>(null);
-                    AtomicInteger i = new AtomicInteger(landlordCountdown);
+
                     landlordsGameInfo.getSorts().forEach((userId, sort) -> {
                         if (sort.equals(nextSort)) {
                             id.set(userId);
                         }
                     });
                     // 通知
-                    if (id.get() != null) {
-                        landlordsGameInfo.setTimerId(timerUtil.startTask(() -> {
-                            NettyMessage message = new NettyMessage();
-                            message.setContent(id.get() + "开始操作，倒计时" + i.get() + "秒");
-                            message.setMsgType(NettyMsgTypeEnum.COUNT_DOWN);
-                            NettyHandlerServer.getInstance().sendAllMsgByIds(message, landlordsGameInfo.getHandCards().keySet());
-                            i.getAndDecrement();
-                        }, 1300, landlordCountdown * 1300, () -> {
-                            // 超时处理
-                            // 正在叫地主
-                            if (GameManageServer.getInstance().getBeLandlordsMap(roomId) != null) {
-                                BeLandlordParam param = new BeLandlordParam();
-                                param.setUserId(id.get());
-                                param.setIsBeLandlord(false);
-                                beLandlord(param);
-                            } else {
-                                PlayBrandParam param = new PlayBrandParam();
-                                param.setUserId(id.get());
-                                // 是出牌人
-                                if (landlordsGameInfo.getCurrentOutCardSort() == null ||
-                                        landlordsGameInfo.getCurrentOutCardSort().equals(nextSort)) {
-                                    param.setBrand(Lists.newArrayList(landlordsGameInfo.getHandCards().get(id.get()).get(0)));
-                                    param.setPlay(true);
-                                    playBrand(param);
-                                    // 更新页面牌组
-                                    NettyMessage message = new NettyMessage();
-                                    message.setContent(JsonUtil.list2Json(landlordsGameInfo.getHandCards().get(id.get())));
-                                    message.setMsgType(NettyMsgTypeEnum.LANDLORD_AUTO_PLAY);
-                                    NettyHandlerServer.getInstance().sendAllMsgByIds(message, Sets.newHashSet(id.get()));
-                                } else {
-                                    // 过牌
-                                    param.setPlay(false);
-                                    playBrand(param);
-                                }
-                            }
-                        }));
-                    }
+                    startLandlordCountdown(id.get(), nextSort, landlordsGameInfo);
                 });
+    }
+
+    private void startLandlordCountdown(String userId, Integer nextSort, LandlordsGameInfo landlordsGameInfo) {
+        if (userId != null) {
+            AtomicInteger i = new AtomicInteger(landlordCountdown);
+            landlordsGameInfo.setTimerId(timerUtil.startTask(() -> {
+                NettyMessage message = new NettyMessage();
+                message.setContent(userId + "开始操作，倒计时" + i.get() + "秒");
+                message.setMsgType(NettyMsgTypeEnum.COUNT_DOWN);
+                NettyHandlerServer.getInstance().sendAllMsgByIds(message, landlordsGameInfo.getHandCards().keySet());
+                i.getAndDecrement();
+            }, 1300, landlordCountdown * 1300, () -> {
+                // 超时处理
+                // 正在叫地主
+                if (GameManageServer.getInstance().getBeLandlordsMap(landlordsGameInfo.getRoomId()) != null) {
+                    BeLandlordParam param = new BeLandlordParam();
+                    param.setUserId(userId);
+                    param.setIsBeLandlord(false);
+                    beLandlord(param);
+                } else {
+                    PlayBrandParam param = new PlayBrandParam();
+                    param.setUserId(userId);
+                    // 是出牌人
+                    if (landlordsGameInfo.getCurrentOutCardSort() == null ||
+                            landlordsGameInfo.getCurrentOutCardSort().equals(nextSort)) {
+                        param.setBrand(Lists.newArrayList(landlordsGameInfo.getHandCards().get(userId).get(0)));
+                        param.setPlay(true);
+                        playBrand(param);
+                        // 更新页面牌组
+                        NettyMessage message = new NettyMessage();
+                        message.setContent(JsonUtil.list2Json(landlordsGameInfo.getHandCards().get(userId)));
+                        message.setMsgType(NettyMsgTypeEnum.LANDLORD_AUTO_PLAY);
+                        NettyHandlerServer.getInstance().sendAllMsgByIds(message, Sets.newHashSet(userId));
+                    } else {
+                        // 过牌
+                        param.setPlay(false);
+                        playBrand(param);
+                    }
+                }
+            }));
+        }
     }
 
     private void stopLandlordCountdown(LandlordsGameInfo landlordsGameInfo) {

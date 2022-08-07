@@ -1,6 +1,7 @@
 package com.fengx.saltedfish.server;
 
 import com.fengx.saltedfish.common.exception.WarnException;
+import com.fengx.saltedfish.model.entity.BaseGameInfo;
 import com.fengx.saltedfish.model.entity.GameRoomInfo;
 import com.fengx.saltedfish.model.entity.LandlordsGameInfo;
 import com.fengx.saltedfish.model.entity.NettyMessage;
@@ -60,6 +61,12 @@ public class GameManageServer {
      * 凡是有过“不叫地主”操作的玩家无法进行“抢地主”的操作
      */
     private static final Map<String, Integer[]> BE_LANDLORDS_MAP = new Hashtable<>();
+
+    @FunctionalInterface
+    public interface GameBeginOperation {
+
+        void run(BaseGameInfo gameInfo);
+    }
 
     /**
      * 切换下一位需要执行的操作
@@ -181,6 +188,7 @@ public class GameManageServer {
         // 通知开始游戏
         NettyMessage begin = new NettyMessage();
         begin.setMsgType(NettyMsgTypeEnum.BEGIN_GAME);
+        begin.setContent(roomId);
         NettyHandlerServer.getInstance().sendAllMsgByIds(begin, userIds);
     }
 
@@ -261,7 +269,7 @@ public class GameManageServer {
     /**
      * 进入房间
      */
-    public boolean joinRoom(String roomId, String userId) {
+    public boolean joinRoom(String roomId, String userId, GameBeginOperation operation) {
         if (inspectUserJoinRoom(userId) != null) {
             throw new WarnException("不能重复加入房间！");
         }
@@ -279,6 +287,7 @@ public class GameManageServer {
                     if (gameRoomInfo.getUserIds().size() == 3) {
                         gameRoomInfo.setPlaying(true);
                         landlordRefreshGame(roomId, gameRoomInfo.getUserIds());
+                        operation.run(LANDLORDS_MAP.get(roomId));
                     }
                 }
             }
@@ -327,6 +336,7 @@ public class GameManageServer {
             }
             i++;
         }
+        gameInfo.setRoomId(roomId);
         gameInfo.setDipai(cards.get(3));
         gameInfo.setHandCards(hashMap);
         gameInfo.setLandlord(null);

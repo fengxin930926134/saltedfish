@@ -189,7 +189,9 @@
             beginGame() {
                 switch (this.$route.query.id) {
                     case "LANDLORDS":
-                        this.$router.push({path: '/landlords', query: {roomId: this.roomId}});
+                        setTimeout(() => {
+                            this.$router.push({path: '/landlords', query: {roomId: this.roomId}});
+                        }, 200);
                         break;
                     default:
                         this.$message.error("进入游戏异常")
@@ -232,6 +234,7 @@
                     }
                         break;
                     case "BEGIN_GAME": {
+                        this.roomId = obj.content;
                         this.beginGame();
                     }
                         break;

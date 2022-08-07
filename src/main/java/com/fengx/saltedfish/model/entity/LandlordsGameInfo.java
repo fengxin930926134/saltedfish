@@ -1,6 +1,7 @@
 package com.fengx.saltedfish.model.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 import java.util.Map;
@@ -8,8 +9,9 @@ import java.util.Map;
 /**
  * 斗地主房间信息
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class LandlordsGameInfo {
+public class LandlordsGameInfo extends BaseGameInfo {
 
     /**
      * 游戏日志
