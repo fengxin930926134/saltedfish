@@ -26,7 +26,7 @@
 					>
 						<span class="a-inner">{{ item.name }}</span>
 					</router-link>
-					
+
 					</el-menu-item
 				>
 			</el-menu>
@@ -99,11 +99,11 @@ export default {
 					name: '页面3',
 					typ: false //是否跳转其它网址
 				},
-				{
-					path: 'http://kmind.top/',
-					name: '简搜',
-					typ: true //是否跳转其它网址
-				},
+				// {
+				// 	path: 'http://kmind.top/',
+				// 	name: '简搜',
+				// 	typ: true //是否跳转其它网址
+				// },
 			]
 		};
 	},
