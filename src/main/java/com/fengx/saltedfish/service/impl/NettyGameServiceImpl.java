@@ -7,6 +7,7 @@ import com.fengx.saltedfish.common.response.SuccessResponse;
 import com.fengx.saltedfish.model.entity.GameRoomInfo;
 import com.fengx.saltedfish.model.entity.LandlordsGameInfo;
 import com.fengx.saltedfish.model.entity.NettyMessage;
+import com.fengx.saltedfish.model.enums.LandlordsHandCardsTypeEnum;
 import com.fengx.saltedfish.model.enums.NettyMsgTypeEnum;
 import com.fengx.saltedfish.model.enums.RoomTypeEnum;
 import com.fengx.saltedfish.model.param.*;
@@ -81,7 +82,7 @@ public class NettyGameServiceImpl implements NettyGameService {
                 LandlordsGameInfo landlordsGameInfo = (LandlordsGameInfo) gameInfo;
                 startLandlordCountdown(landlordsGameInfo.getSorts().entrySet().stream()
                                 .filter(e -> e.getValue().equals(landlordsGameInfo.getCurrentSort()))
-                        .map(Map.Entry::getKey).collect(Collectors.toList()).get(0),
+                                .map(Map.Entry::getKey).collect(Collectors.toList()).get(0),
                         landlordsGameInfo.getCurrentSort(),
                         landlordsGameInfo);
             }
@@ -226,7 +227,7 @@ public class NettyGameServiceImpl implements NettyGameService {
             throw new WarnException("未加入房间！");
         }
         LandlordsGameInfo landlordsGameInfo = GameManageServer.getInstance().getLandlordsGameInfo(roomId);
-        inspectUserOperate(landlordsGameInfo, param.getUserId());
+        Integer sort = inspectUserOperate(landlordsGameInfo, param.getUserId());
         String content;
         boolean gameOver = false;
         if (param.getPlay()) {
@@ -235,13 +236,16 @@ public class NettyGameServiceImpl implements NettyGameService {
                 throw new WarnException("至少选中一张牌！");
             }
             // 检查是否合规
-            if (!LandlordsUtil.validationRules(param.getBrand(), landlordsGameInfo.getCurrentAlreadyOutCards())) {
+            LandlordsHandCardsTypeEnum typeEnum = LandlordsUtil.validationRules(param.getBrand(),
+                    landlordsGameInfo.getCurrentOutCardSort() != null &&
+                            landlordsGameInfo.getCurrentOutCardSort().equals(sort) ? null : landlordsGameInfo.getCurrentAlreadyOutCards());
+            if (typeEnum.equals(LandlordsHandCardsTypeEnum.ERROR)) {
                 throw new WarnException("出牌不合规则！");
             }
             // 把牌出掉
             param.getBrand().forEach(item -> landlordsGameInfo.getHandCards().get(param.getUserId()).remove(item));
             int size = landlordsGameInfo.getHandCards().get(param.getUserId()).size();
-            content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + "  [剩余" + size + "张牌]";
+            content = param.getUserId() + "出牌  >>>  " + String.join("、", param.getBrand()) + " (" + typeEnum.getDesc() + ") [剩余" + size + "张牌]";
             // 更新已出牌序号和牌组
             landlordsGameInfo.setCurrentOutCardSort(landlordsGameInfo.getCurrentSort());
             landlordsGameInfo.setCurrentAlreadyOutCards(param.getBrand());
