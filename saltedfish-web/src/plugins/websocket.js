@@ -15,7 +15,7 @@ const reconnectMaxNumber = 20;
 const heartbeatTime = 30 * 1000;
 // 用户id
 const wsUserIdKey = "wsUserId";
-console.log("userId =", localStorage.getItem(wsUserIdKey));
+// console.log("userId =", localStorage.getItem(wsUserIdKey));
 /**
  * 已发送消息
  */
@@ -89,7 +89,7 @@ let sendMsg = (data) => {
  * 需要转成string发送
  */
 let send = (msg) => {
-    console.log("send -> " + msg);
+    // console.log("send -> " + msg);
     ws.send(msg)
 };
 
@@ -151,7 +151,7 @@ let sendHeartbeatRequest = () => {
 
 //获取 websocket 推送的数据
 let websocketonmessage = e => {
-    console.log("receive -> " + e.data);
+    // console.log("receive -> " + e.data);
     // 收到消息刷新心跳
     heartCheck.start(false);
     // 处理

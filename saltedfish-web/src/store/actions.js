@@ -22,7 +22,7 @@ const actions = {
 				url: apiPath[apiUrl],
 				data: params || {}
 			}).then(function(r) {
-				console.log(r)
+				// console.log(r)
 				if (r.status === 200) {
 					resolve(r.data)
 				}

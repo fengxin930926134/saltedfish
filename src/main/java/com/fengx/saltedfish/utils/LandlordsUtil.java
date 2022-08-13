@@ -24,7 +24,7 @@ public class LandlordsUtil {
     private static final List<String> SPECIAL_BRAND = Lists.newArrayList("2", "king", "KING");
 
     public static void main(String[] args) {
-        System.out.println(validationRules(Lists.newArrayList("7", "8", "9", "10", "J", "Q", "K"),
+        System.out.println(validationRules(Lists.newArrayList("3", "4", "5", "6", "7", "8"),
                 Lists.newArrayList("3", "4", "5", "6", "7", "8")
                 ).getDesc());
     }
@@ -135,7 +135,7 @@ public class LandlordsUtil {
                         List<List<String>> lists1 = collect1.values().stream().filter(e -> e.size() == 3).collect(Collectors.toList());
                         int sum3 = getCardsWeightList(lists1.stream().flatMap(Collection::stream).collect(Collectors.toList()))
                                 .stream().mapToInt(Integer::intValue).sum();
-                        if (sum1 < sum3) {
+                        if (sum1 <= sum3) {
                             type = LandlordsHandCardsTypeEnum.ERROR;
                         }
                         break;
@@ -156,14 +156,14 @@ public class LandlordsUtil {
                         });
                         int sum4 = sorts.stream().mapToInt(Integer::intValue).sum();
                         int sum5 = sorts2.stream().mapToInt(Integer::intValue).sum();
-                        if (sum4 < sum5) {
+                        if (sum4 <= sum5) {
                             type = LandlordsHandCardsTypeEnum.ERROR;
                         }
                         break;
                     default: {
                         int sum = getCardsWeightList(paizu).stream().mapToInt(Integer::intValue).sum();
                         int sum2 = getCardsWeightList(currentAlreadyOutCards).stream().mapToInt(Integer::intValue).sum();
-                        if (sum < sum2) {
+                        if (sum <= sum2) {
                             type = LandlordsHandCardsTypeEnum.ERROR;
                         }
                     }

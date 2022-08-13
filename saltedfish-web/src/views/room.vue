@@ -224,7 +224,7 @@
             );
             // 监听socket消息
             setMessageListener((obj) => {
-                console.log(obj);
+                // console.log(obj);
                 switch (obj.msgType) {
                     case "UPDATE_ROOM_NUMBER": {
                         this.roomCurrentNumber = obj.content;

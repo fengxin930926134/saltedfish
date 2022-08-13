@@ -83,7 +83,7 @@
             // 选牌
             cardsOnClick(index) {
                 this.$set(this.isSelect, index, !this.isSelect[index]);
-                console.log(this.isSelect);
+                // console.log(this.isSelect);
             },
             // 获取游戏信息
             getGameInfo() {

@@ -128,7 +128,7 @@ export default {
 	mounted() {
 		let _this = this;
 		_this.activePath = _this.headerDefault ? _this.headerActive : _this.$route.path;
-		console.log(_this.$route.path);
+		// console.log(_this.$route.path);
 		let getWidth = _this.$store.state.w;
 		// alert(getWidth)
 		if (getWidth < 800) {
