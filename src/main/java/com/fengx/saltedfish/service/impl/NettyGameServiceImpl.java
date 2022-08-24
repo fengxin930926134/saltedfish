@@ -179,6 +179,14 @@ public class NettyGameServiceImpl implements NettyGameService {
                 }
                 break;
             case 2:
+                if (sort == 3 && beLandlordsMap[0] == 0) {
+                    // 如果1没叫 说明现在是3成为地主
+                    landlordsGameInfo.getSorts().forEach((userId, index) -> {
+                        if (index == 3) {
+                            landlordsGameInfo.setLandlord(userId);
+                        }
+                    });
+                }
                 if (sort == 1) {
                     // 说明有人抢了但1没抢
                     int be = 3;
@@ -194,6 +202,19 @@ public class NettyGameServiceImpl implements NettyGameService {
                 }
                 break;
             case 3:
+                if (sort == 1) {
+                    int be = 1;
+                    if (beLandlordsMap[2] == 1) {
+                        be = 3;
+                    }
+                    int finalBe = be;
+                    landlordsGameInfo.getSorts().forEach((userId, index) -> {
+                        if (index == finalBe) {
+                            landlordsGameInfo.setLandlord(userId);
+                        }
+                    });
+                }
+                break;
             case 4:
                 if (sort == 1) {
                     // 设置序号1为地主
