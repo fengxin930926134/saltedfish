@@ -239,7 +239,7 @@
                     }
                         break;
                     default:
-                        console.error("类型未处理...")
+                        console.error("未处理类型：" + obj.msgType)
                 }
             })
         },

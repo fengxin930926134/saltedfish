@@ -32,6 +32,7 @@
 
 <script>
     import {setMessageListener, getWsUserId} from '../plugins/websocket'
+    import {startNotice, stopNotice} from '../plugins/notice'
 
     export default {
         data() {
@@ -118,6 +119,11 @@
                             break;
                         case "NEXT_OPERATION":
                             this.gameData.currentSort = Number.parseInt(obj.content);
+                            if (this.gameData.currentSort ===  this.gameData.sort) {
+                                startNotice("该你出牌了")
+                            } else {
+                                stopNotice()
+                            }
                             break;
                         case "COUNT_DOWN":
                             this.countDownText = obj.content;
@@ -148,7 +154,7 @@
                         }
                             break;
                         default:
-                            console.error("未处理类型")
+                            console.error("未处理类型：" + obj.msgType)
                     }
                 }
             });

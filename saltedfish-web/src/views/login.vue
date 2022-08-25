@@ -51,24 +51,15 @@ export default {
 			},
 			checked: true,
 			banner: [
-				{
-					pic: require('../assets/login/1.jpg'),
-					alt: '1'
-				},
-				{
-					pic: require('../assets/login/3.jpg'),
-					alt: '2'
-				},
-				{
-					pic: require('../assets/login/2.jpg'),
-					alt: '3'
-				},
-				{
-					pic: require('../assets/login/4.jpg'),
-					alt: '4'
-				}
+				// {
+				// 	pic: require('../assets/login/1.jpg'),
+				// 	alt: '1'
+				// }
 			]
 		};
+	},
+	created() {
+		this.$router.push('/index');
 	},
 	methods: {
 		submitForm: async function() {
@@ -79,7 +70,7 @@ export default {
 // 			};
 // 			const getResult = await this.$store.dispatch('apiRequest', requestConfig);
 // 			console.log(getResult)
-			this.$store.commit('login')
+// 			this.$store.commit('login')
 			this.$router.push('/index');
 		}
 	},

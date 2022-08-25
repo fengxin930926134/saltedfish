@@ -27,15 +27,17 @@ router.beforeEach((to, from, next) => {
                 path: from.path
             }) : next('/'); //如果上级也未匹配到路由则跳转主页面，如果上级能匹配到则转上级路由
         } else {
-            if (localStorage.getItem('isLogin')) {
-                //如果不需要登录验证，或者已经登录成功，则直接放行
-                next()
-            } else {
-                //下一跳路由需要登录验证，并且还未登录，则路由定向到 登录路由
-                next({
-                    path: '/login'
-                })
-            }
+            // if (localStorage.getItem('isLogin')) {
+            //     //如果不需要登录验证，或者已经登录成功，则直接放行
+            //     next()
+            // } else {
+            //     //下一跳路由需要登录验证，并且还未登录，则路由定向到 登录路由
+            //     next({
+            //         path: '/login'
+            //     })
+            // }
+            // 不登录
+            next()
         }
     }
 

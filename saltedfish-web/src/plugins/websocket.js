@@ -1,5 +1,4 @@
 import {uuid} from "./uuid";
-import {Message} from "element-ui";
 
 let wsurl = process.env.VUE_APP_WS_URL;
 let ws = null;
