@@ -18,7 +18,7 @@ public class LandlordsUtil {
      * 正常排序
      */
     private static final List<String> SORT = Lists.newArrayList(
-            "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2", "king", "KING"
+            "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2", "小王", "大王"
     );
 
     private static final List<String> SPECIAL_BRAND = Lists.newArrayList("2", "king", "KING");
@@ -38,8 +38,8 @@ public class LandlordsUtil {
         String[] colors = {"♥", "♠", "♦", "♣"};
         String[] numbers = {"A", "J", "Q", "K", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
         // 存储大小王
-        poker.add("KING");
-        poker.add("king");
+        poker.add("大王");
+        poker.add("小王");
         //循环遍历两个数组，组装52张牌
         for (String color : colors) {
             for (String number : numbers) {

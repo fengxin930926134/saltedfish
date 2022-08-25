@@ -120,7 +120,7 @@
                         case "NEXT_OPERATION":
                             this.gameData.currentSort = Number.parseInt(obj.content);
                             if (this.gameData.currentSort ===  this.gameData.sort) {
-                                startNotice("该你出牌了")
+                                startNotice("该你操作了")
                             } else {
                                 stopNotice()
                             }
@@ -141,6 +141,7 @@
                         }
                             break;
                         case "GAME_OVER": {
+                            stopNotice();
                             this.countDownText = "";
                             this.$message.success("游戏结束, 3秒之后回到房间列表");
                             setTimeout(() => {
@@ -150,6 +151,7 @@
                             break;
                         // 重开
                         case "BEGIN_GAME": {
+                            stopNotice();
                             this.getGameInfo();
                         }
                             break;

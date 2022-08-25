@@ -204,7 +204,7 @@ public class NettyGameServiceImpl implements NettyGameService {
             case 3:
                 if (sort == 1) {
                     int be = 1;
-                    if (beLandlordsMap[2] == 1) {
+                    if (beLandlordsMap[2] == 1 && beLandlordsMap[0] != 2) {
                         be = 3;
                     }
                     int finalBe = be;
