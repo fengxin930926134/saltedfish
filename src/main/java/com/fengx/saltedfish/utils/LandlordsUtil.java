@@ -7,6 +7,7 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -24,8 +25,8 @@ public class LandlordsUtil {
     private static final List<String> SPECIAL_BRAND = Lists.newArrayList("2", "king", "KING");
 
     public static void main(String[] args) {
-        System.out.println(validationRules(Lists.newArrayList("3", "4", "5", "6", "7", "8"),
-                Lists.newArrayList("3", "4", "5", "6", "7", "8")
+        System.out.println(validationRules(Lists.newArrayList("3", "3", "3", "4", "4", "4", "5", "5","5","1","2","3"),
+                null
                 ).getDesc());
     }
 
@@ -282,6 +283,7 @@ public class LandlordsUtil {
         Map<Integer, List<String>> collect = cards.stream().collect(Collectors.groupingBy(SORT::indexOf));
         List<Integer> sorts = Lists.newArrayList();
         List<String> other = Lists.newArrayList();
+        // 常规区分
         collect.forEach((i, values) -> {
             if (values.size() >= 3) {
                 sorts.add(i);
@@ -294,21 +296,71 @@ public class LandlordsUtil {
                 other.addAll(values);
             }
         });
+        // 特殊情况
+        if (sorts.size() == 4 && other.size() == 0) {
+            int number = 0;
+            sorts.sort(Comparator.comparingInt(o -> o));
+            for (int i = 0; i < sorts.size() - 1; i++) {
+                if (!sorts.get(i).equals(sorts.get(i + 1) - 1)) {
+                    number++;
+                }
+            }
+            return number <= 1;
+        }
+        Boolean aircraft = verificationAircraft(sorts, other);
+        if (!aircraft) {
+            // 特殊区分
+            List<Integer> sorts1 = Lists.newArrayList();
+            List<String> other1= Lists.newArrayList();
+            collect.forEach((i, values) -> {
+                if (values.size() == 3) {
+                    sorts1.add(i);
+                } else {
+                    other1.addAll(values);
+                }
+            });
+            aircraft = verificationAircraft(sorts1, other1);
+        }
+        return aircraft;
+    }
+
+    /**
+     * 具体验证飞机逻辑
+     *
+     * @param sorts 顺序排
+     * @param other 其他牌
+     * @return Boolean
+     */
+    private static Boolean verificationAircraft(List<Integer> sorts, List<String> other) {
         sorts.sort(Comparator.comparingInt(o -> o));
         for (int i = 0; i < sorts.size() - 1; i++) {
             if (!sorts.get(i).equals(sorts.get(i + 1) - 1)) {
                 return false;
             }
         }
-        List<Integer> cardsWeightList = getCardsWeightList(other);
-        HashSet<Integer> hashSet = Sets.newHashSet(cardsWeightList);
-        if (hashSet.size() > sorts.size()) {
+        // 验证拼上来的牌
+        if (other.size() != sorts.size() && (other.size() / 2 != sorts.size())) {
             return false;
         }
-        if (hashSet.size() == sorts.size()) {
-            // 判断是否是对子
-            Map<Integer, List<Integer>> collect1 = cardsWeightList.stream().collect(Collectors.groupingBy(Integer::intValue));
-            return collect1.values().stream().anyMatch(e -> e.size() == 2);
+
+        if (other.size() / 2 == sorts.size()) {
+            // 验证是否成对
+            AtomicInteger i = new AtomicInteger();
+            Map<String, Integer> map = new HashMap<>(2);
+            other.forEach(item -> {
+                Integer orDefault = map.getOrDefault(item, 0);
+                orDefault++;
+                map.put(item, orDefault);
+            });
+            map.values().forEach(number -> {
+                if (number == 2) {
+                    i.getAndIncrement();
+                }
+                if (number == 4) {
+                    i.set(i.get() + 2);
+                }
+            });
+            return i.get() == sorts.size();
         }
         return true;
     }

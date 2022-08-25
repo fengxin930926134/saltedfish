@@ -151,6 +151,8 @@ public class NettyGameServiceImpl implements NettyGameService {
         landlordsGameInfo.getLog().add(content);
         GameManageServer.getInstance().pushLog(content, landlordsGameInfo.getHandCards().keySet());
 
+        // 停止上一个倒计时
+        stopLandlordCountdown(landlordsGameInfo);
         // 判断这次操作后的结局
         switch (zong) {
             case 0:
@@ -158,6 +160,14 @@ public class NettyGameServiceImpl implements NettyGameService {
                     // 重开
                     GameManageServer.getInstance()
                             .landlordRefreshGame(roomId, landlordsGameInfo.getHandCards().keySet());
+                    // 重置后的游戏信息
+                    LandlordsGameInfo info = GameManageServer.getInstance().getLandlordsGameInfo(roomId);
+                    startLandlordCountdown(info.getSorts().entrySet().stream()
+                                    .filter(e -> e.getValue().equals(info.getCurrentSort()))
+                                    .map(Map.Entry::getKey).collect(Collectors.toList()).get(0),
+                            info.getCurrentSort(),
+                            info);
+                    return new SuccessResponse();
                 }
                 break;
             case 1:
@@ -228,8 +238,6 @@ public class NettyGameServiceImpl implements NettyGameService {
             default:
         }
 
-        // 停止上一个倒计时
-        stopLandlordCountdown(landlordsGameInfo);
         // 未决出地主则切换下一人操作
         if (StringUtils.isBlank(landlordsGameInfo.getLandlord())) {
             landlordNextOperation(landlordsGameInfo);
@@ -327,7 +335,14 @@ public class NettyGameServiceImpl implements NettyGameService {
                 });
     }
 
-    private void startLandlordCountdown(String userId, Integer nextSort, LandlordsGameInfo landlordsGameInfo) {
+    /**
+     * 给斗地主用户发送倒计时消息
+     *
+     * @param userId            用户id
+     * @param currSort          游戏序号
+     * @param landlordsGameInfo info
+     */
+    private void startLandlordCountdown(String userId, Integer currSort, LandlordsGameInfo landlordsGameInfo) {
         if (userId != null) {
             AtomicInteger i = new AtomicInteger(landlordCountdown);
             landlordsGameInfo.setTimerId(timerUtil.startTask(() -> {
@@ -349,7 +364,7 @@ public class NettyGameServiceImpl implements NettyGameService {
                     param.setUserId(userId);
                     // 是出牌人
                     if (landlordsGameInfo.getCurrentOutCardSort() == null ||
-                            landlordsGameInfo.getCurrentOutCardSort().equals(nextSort)) {
+                            landlordsGameInfo.getCurrentOutCardSort().equals(currSort)) {
                         param.setBrand(Lists.newArrayList(landlordsGameInfo.getHandCards().get(userId).get(0)));
                         param.setPlay(true);
                         playBrand(param);
