@@ -1,11 +1,15 @@
 package com.fengx.saltedfish.config.thread;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *  线程池配置
@@ -37,6 +41,16 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 @Configuration
 public class ThreadPoolConfig {
+
+    @Bean
+    public ExecutorService executorService(){
+        return new ThreadPoolExecutor(
+                5,
+                20,
+                60,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(200), new ThreadFactoryBuilder().setNameFormat("my-thread").build());
+    }
 
     @Bean
     public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
